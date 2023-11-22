@@ -26,6 +26,7 @@ async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
+        const userCollection = client.db("bistroDB").collection("users");
         const MenuCollection = client.db("bistroDB").collection("menuCollection");
         const reviewsCollection = client.db("bistroDB").collection("reviews")
         const cartsCollection = client.db("bistroDB").collection("carts")
@@ -54,6 +55,23 @@ async function run() {
             const query = { _id: new ObjectId(id) }
             const result = await cartsCollection.deleteOne(query);
             res.send(result);
+        })
+        // user related api
+        app.post("/users", async (req, res) => {
+            const users = req.body;
+            // insert email if user doesn't exist
+            // you can do this many away (1. email unique, 2.upsert, 3.simple checking)
+            const query = { email: users.email }
+            const exisTingUser = await userCollection.findOne(query)
+            if (exisTingUser) {
+                return res.send({ message: "user already exist", insertedId: null })
+            }
+            const result = await userCollection.insertOne(users)
+            res.send(result)
+        })
+        app.get('/users', async (req, res) => {
+            const result = await userCollection.find().toArray()
+            res.send(result)
         })
 
 
